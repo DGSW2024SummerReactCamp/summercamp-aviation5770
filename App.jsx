@@ -1,27 +1,85 @@
-import './App.css'; // App.css파일을 import(불러오기) 하여 스타일을 적용
-import {useState} from 'react'; // useState 훅을 import하여 상태를 관리
-import Viewer from './components/Viewer'; // Viewer 컴포넌트를 import
-import Controller from './components/Controller'; // Controller 컴포넌트를 import
+import "./App.css";
+import { useReducer, useRef } from "react";
+import Header from './components/Header';
+import TodoEditor from './components/TodoEditor';
+import TodoList from './components/TodoList';
+// import TestComp from "./components/TestComp";
+
+const reducer = (state, action) => {
+  switch (action.type) {
+    case "CREATE" : {
+      return [action.newTodo, ...state];
+    }
+    case "UPDATE" : {
+      return state.map((it) =>
+      it.id === action.targetId ? { ...it, isDone: !it.isDone } : it)
+    };
+    case "DELETE" : {
+      return state.filter((it) => it.id !== action.targetId)
+    };
+  };
+};
+
+const mockTodo = [
+  {
+    id: 0,
+    isDone: false,
+    content: "React 공부하기",
+    createdDate: new Date().getTime(),
+  },
+  {
+    id: 1,
+    isDone: false,
+    content: "빨래 널기",
+    createdDate: new Date().getTime(),
+  },
+  {
+    id: 2,
+    isDone: false,
+    content: "노래 연습하기",
+    createdDate: new Date().getTime(),
+  },
+];
 
 const App = () => {
-  const [count, setCount] = useState(0); // 상태 변수인 count와 값을 변경해줄 함수 setCount를 선언하여 초깃값을 0으로 지정
-  // 초깃값과 변경될 값의 변수 이름은 초깃값 이름, set + 초깃값 으로 정하는 것이 암묵적 룰이다.
+  const [todo, dispatch] = useReducer(reducer, mockTodo);
+  // const [todo, setTodo] = useState(mockTodo);
+  const idRef = useRef(3);
 
-  const handleSetCount = (value) => { // handleSetCount라는 이름의 함수를 선언
-    setCount(count+value) // handleSetCount 함수의 역할로 count의 값을 value과 합하는 역할을 부여
+  const onCreate = (content) => {
+    dispatch({
+      type : "CREATE",
+      newTodo : {
+        id: idRef.current,
+        content,
+        isDone: false,
+        createdDate: new Date().getTime(),
+      },
+    });
+    idRef.current += 1;
+  };
+
+  const onUpdate = (targetId) => {
+    dispatch({
+      type : "UPDATE",
+      targetId,
+    });
+  };
+
+  const onDelete = (targetId) => {
+    dispatch({
+      type : "DELETE",
+      targetId,
+    });
   };
 
   return (
-    <div className = 'App'> {/* App 이라는 클래스 이름을 가진 div 요소 */}
-      <h1>Simple Counter</h1> {/* 뷰에 표시할 제목 요소 */}
-      <section>
-        <Viewer count = {count} /> {/* Viewer 컴포넌트에 count 값을 props로 전달 */}
-      </section>
-      <section>
-        <Controller handleSetCount = {handleSetCount} /> {/* Controller 컴포넌트에 handleSetCount 함수를 props으로 전달*/}
-      </section>
+    <div className="App">
+      {/* <TestComp /> */}
+      <Header />
+      <TodoEditor onCreate={onCreate} />
+      <TodoList todo={todo} onUpdate={onUpdate} onDelete={onDelete} />
     </div>
   );
-};
-
-export default App; // App 컴포넌트 내보내기
+}
+export default App;
